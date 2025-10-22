@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PairWise Ranking</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>PairWise Ranking Helper</h1>
+      <p>Paste a list of items, then compare them side-by-side to build a ranked order.</p>
+    </header>
+
+    <section id="input-section" class="card">
+      <h2>1. Provide items to rank</h2>
+      <label for="items-input" class="sr-only">Items to rank</label>
+      <textarea id="items-input" rows="8" placeholder="Enter one item per line or separate with commas"></textarea>
+      <p id="error-message" class="error hidden" role="alert"></p>
+      <button id="start-button" class="primary">Start Ranking</button>
+    </section>
+
+    <section id="comparison-section" class="card hidden" aria-live="polite">
+      <h2>2. Choose your preferred item</h2>
+      <p id="prompt">Which item do you prefer?</p>
+      <div class="options">
+        <button id="option-a" class="choice"></button>
+        <span class="vs">vs</span>
+        <button id="option-b" class="choice"></button>
+      </div>
+      <p id="progress"></p>
+    </section>
+
+    <section id="results-section" class="card hidden">
+      <h2>3. Final ranking</h2>
+      <ol id="results-list"></ol>
+      <button id="restart-button" class="secondary">Start Over</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>Built with a straightforward pairwise comparison algorithm to minimize the number of choices you need to make.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
