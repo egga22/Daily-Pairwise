@@ -19,6 +19,8 @@ let currentItem = '';
 let low = 0;
 let high = 0;
 let mid = 0;
+let totalSteps = 0;
+let completedSteps = 0;
 
 startButton.addEventListener('click', () => {
   const parsed = parseItems(itemsInput.value);
@@ -35,12 +37,14 @@ startButton.addEventListener('click', () => {
 
 optionAButton.addEventListener('click', () => {
   // The current item wins the comparison.
+  markComparisonComplete();
   high = mid;
   nextStep();
 });
 
 optionBButton.addEventListener('click', () => {
   // The existing ranked item stays ahead.
+  markComparisonComplete();
   low = mid + 1;
   nextStep();
 });
@@ -69,8 +73,14 @@ function beginRanking() {
   comparisonSection.classList.add('hidden');
   resultsSection.classList.add('hidden');
 
+  sortedItems = [];
+  currentIndex = 0;
+
+  initializeProgressTracking();
+
   if (items.length === 1) {
     sortedItems = [...items];
+    currentIndex = items.length;
     showResults();
     return;
   }
@@ -126,7 +136,9 @@ function updateProgress() {
 
   const total = items.length;
   const rankedCount = sortedItems.length;
-  const completion = Math.min(rankedCount / total, 1);
+  const completion = totalSteps
+    ? Math.min(completedSteps / totalSteps, 1)
+    : Math.min(rankedCount / total, 1);
 
   updateProgressVisual(completion);
 
@@ -171,6 +183,11 @@ function showResults() {
   resultsSection.classList.remove('hidden');
   resultsList.innerHTML = '';
 
+  if (totalSteps > 0) {
+    completedSteps = totalSteps;
+    updateProgress();
+  }
+
   sortedItems.forEach((item) => {
     const li = document.createElement('li');
     li.textContent = item;
@@ -186,6 +203,8 @@ function resetApp() {
   low = 0;
   high = 0;
   mid = 0;
+  totalSteps = 0;
+  completedSteps = 0;
   itemsInput.value = '';
   resultsList.innerHTML = '';
   hideError();
@@ -200,3 +219,42 @@ function resetApp() {
 
 // Autofocus the textarea for quick input.
 itemsInput.focus();
+
+function initializeProgressTracking() {
+  completedSteps = 0;
+
+  if (!items.length) {
+    totalSteps = 0;
+    resetProgressVisual();
+    progressText.textContent = '';
+    return;
+  }
+
+  totalSteps = estimateTotalSteps(items.length);
+  updateProgress();
+}
+
+function estimateTotalSteps(count) {
+  if (count <= 1) {
+    return 1;
+  }
+
+  let estimate = 0;
+
+  for (let i = 1; i < count; i += 1) {
+    estimate += Math.ceil(Math.log2(i + 1));
+  }
+
+  // Add an extra step for revealing the final results so we can always
+  // smoothly reach 100%.
+  return estimate + 1;
+}
+
+function markComparisonComplete() {
+  if (!totalSteps) {
+    return;
+  }
+
+  completedSteps = Math.min(completedSteps + 1, totalSteps);
+  updateProgress();
+}
