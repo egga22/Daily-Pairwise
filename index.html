@@ -29,7 +29,20 @@
         <span class="vs">vs</span>
         <button id="option-b" class="choice"></button>
       </div>
-      <p id="progress"></p>
+      <div class="progress-container">
+        <div
+          id="progress-bar"
+          class="progress-bar"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+          aria-describedby="progress"
+        >
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <p id="progress"></p>
+      </div>
     </section>
 
     <section id="results-section" class="card hidden">

@@ -9,6 +9,8 @@ const resultsSection = document.getElementById('results-section');
 const resultsList = document.getElementById('results-list');
 const errorMessage = document.getElementById('error-message');
 const progressText = document.getElementById('progress');
+const progressBar = document.getElementById('progress-bar');
+const progressFill = document.getElementById('progress-fill');
 
 let items = [];
 let sortedItems = [];
@@ -80,6 +82,7 @@ function beginRanking() {
 
 function prepareInsertion() {
   if (currentIndex >= items.length) {
+    updateProgress();
     showResults();
     return;
   }
@@ -115,8 +118,52 @@ function compareNext() {
 }
 
 function updateProgress() {
-  const humanIndex = Math.min(currentIndex + 1, items.length);
-  progressText.textContent = `Ranking item ${humanIndex} of ${items.length}. ${sortedItems.length} item(s) ranked so far.`;
+  if (!items.length) {
+    resetProgressVisual();
+    progressText.textContent = '';
+    return;
+  }
+
+  const total = items.length;
+  const rankedCount = sortedItems.length;
+  const completion = Math.min(rankedCount / total, 1);
+
+  updateProgressVisual(completion);
+
+  if (currentIndex >= total) {
+    const noun = total === 1 ? 'item' : 'items';
+    progressText.textContent = `All ${total} ${noun} ranked.`;
+    return;
+  }
+
+  const humanIndex = Math.min(currentIndex + 1, total);
+  const noun = rankedCount === 1 ? 'item' : 'items';
+  progressText.textContent = `Ranking item ${humanIndex} of ${total}. ${rankedCount} ${noun} ranked so far.`;
+}
+
+function updateProgressVisual(ratio) {
+  const clamped = Math.max(0, Math.min(ratio, 1));
+  const percentage = Math.round(clamped * 100);
+
+  if (progressFill) {
+    progressFill.style.width = `${clamped * 100}%`;
+  }
+
+  if (progressBar) {
+    progressBar.setAttribute('aria-valuenow', String(percentage));
+    progressBar.setAttribute('aria-valuetext', `${percentage}% complete`);
+  }
+}
+
+function resetProgressVisual() {
+  if (progressFill) {
+    progressFill.style.width = '0%';
+  }
+
+  if (progressBar) {
+    progressBar.setAttribute('aria-valuenow', '0');
+    progressBar.setAttribute('aria-valuetext', '0% complete');
+  }
 }
 
 function showResults() {
@@ -142,6 +189,8 @@ function resetApp() {
   itemsInput.value = '';
   resultsList.innerHTML = '';
   hideError();
+  resetProgressVisual();
+  progressText.textContent = '';
 
   resultsSection.classList.add('hidden');
   comparisonSection.classList.add('hidden');
