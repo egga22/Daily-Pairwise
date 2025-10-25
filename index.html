@@ -18,7 +18,20 @@
       <label for="items-input" class="sr-only">Items to rank</label>
       <textarea id="items-input" rows="8" placeholder="Enter one item per line or separate with commas"></textarea>
       <p id="error-message" class="error hidden" role="alert"></p>
-      <button id="start-button" class="primary">Start Ranking</button>
+      <div class="input-actions">
+        <button id="start-button" class="primary">Start Ranking</button>
+        <button
+          id="stats-toggle"
+          class="info-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="stats-panel"
+        >
+          <span aria-hidden="true">ℹ️</span>
+          <span class="sr-only">How long will this take?</span>
+        </button>
+      </div>
+      <div id="stats-panel" class="stats-panel hidden" role="region" aria-live="polite"></div>
     </section>
 
     <section id="comparison-section" class="card hidden" aria-live="polite">

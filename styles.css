@@ -59,6 +59,14 @@ textarea:focus {
   border-color: #4c6ef5;
 }
 
+.input-actions {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 button {
   cursor: pointer;
   border: none;
@@ -87,6 +95,59 @@ button.secondary {
   background: transparent;
   color: #4c6ef5;
   border: 2px solid #4c6ef5;
+}
+
+.info-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  background: #eef1fb;
+  color: #4c6ef5;
+  border: 2px solid transparent;
+  box-shadow: 0 8px 16px rgba(31, 42, 68, 0.08);
+}
+
+.info-button:hover {
+  box-shadow: 0 12px 24px rgba(31, 42, 68, 0.12);
+}
+
+.info-button:focus-visible {
+  outline: none;
+  border-color: #4c6ef5;
+  box-shadow: 0 0 0 4px rgba(76, 110, 245, 0.2);
+}
+
+.stats-panel {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: #f4f6ff;
+  border: 1px solid #dfe4ff;
+  color: #37406b;
+  line-height: 1.5;
+}
+
+.stats-panel p {
+  margin: 0 0 0.75rem;
+}
+
+.stats-panel ul {
+  margin: 0 0 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.stats-panel li {
+  margin-bottom: 0.35rem;
+}
+
+.stats-panel small {
+  display: block;
+  margin-top: 0.35rem;
+  color: #5f6b8a;
 }
 
 .options {

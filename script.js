@@ -11,6 +11,8 @@ const errorMessage = document.getElementById('error-message');
 const progressText = document.getElementById('progress');
 const progressBar = document.getElementById('progress-bar');
 const progressFill = document.getElementById('progress-fill');
+const statsToggle = document.getElementById('stats-toggle');
+const statsPanel = document.getElementById('stats-panel');
 
 let items = [];
 let sortedItems = [];
@@ -50,6 +52,19 @@ optionBButton.addEventListener('click', () => {
 });
 
 restartButton.addEventListener('click', resetApp);
+
+if (statsToggle && statsPanel) {
+  statsToggle.addEventListener('click', () => {
+    const isHidden = statsPanel.classList.toggle('hidden');
+    statsToggle.setAttribute('aria-expanded', String(!isHidden));
+
+    if (!isHidden) {
+      updateStatsPanel();
+    }
+  });
+}
+
+itemsInput.addEventListener('input', updateStatsPanel);
 
 function parseItems(raw) {
   return raw
@@ -214,11 +229,22 @@ function resetApp() {
   resultsSection.classList.add('hidden');
   comparisonSection.classList.add('hidden');
   inputSection.classList.remove('hidden');
+
+  if (statsPanel) {
+    statsPanel.classList.add('hidden');
+  }
+
+  if (statsToggle) {
+    statsToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  updateStatsPanel();
   itemsInput.focus();
 }
 
 // Autofocus the textarea for quick input.
 itemsInput.focus();
+updateStatsPanel();
 
 function initializeProgressTracking() {
   completedSteps = 0;
@@ -257,4 +283,173 @@ function markComparisonComplete() {
 
   completedSteps = Math.min(completedSteps + 1, totalSteps);
   updateProgress();
+}
+
+const lengthDistributionCache = new Map();
+
+function updateStatsPanel() {
+  if (!statsPanel) {
+    return;
+  }
+
+  const count = parseItems(itemsInput.value).length;
+
+  if (count === 0) {
+    statsPanel.innerHTML =
+      '<p>Enter two or more items to estimate how many comparisons you will make.</p>';
+    return;
+  }
+
+  const stats = calculateComparisonStats(count);
+
+  if (count === 1) {
+    statsPanel.innerHTML =
+      '<p>Only one item provided, so no comparisons are needed.</p>';
+    return;
+  }
+
+  const averageComparisons = formatDecimal(stats.comparisons.average);
+  const minComparisons = stats.comparisons.min.toLocaleString();
+  const maxComparisons = stats.comparisons.max.toLocaleString();
+  const percentile90Comparisons = stats.comparisons.percentile90.toLocaleString();
+
+  statsPanel.innerHTML = `
+    <p><strong>${count.toLocaleString()}</strong> items typically require about <strong>${averageComparisons}</strong> pairwise decisions.</p>
+    <ul>
+      <li>Minimum: ${minComparisons} decisions</li>
+      <li>Average: ${averageComparisons} decisions</li>
+      <li>90th percentile: ${percentile90Comparisons} decisions</li>
+      <li>Maximum: ${maxComparisons} decisions</li>
+    </ul>
+    <small>Estimates assume each new item is equally likely to end up in any position of the final ranking.</small>
+  `;
+}
+
+function calculateComparisonStats(count) {
+  if (count <= 0) {
+    return null;
+  }
+
+  const distribution = buildTotalComparisonDistribution(count);
+  const summary = summarizeDistribution(distribution);
+
+  return {
+    count,
+    comparisons: summary,
+  };
+}
+
+function buildTotalComparisonDistribution(count) {
+  let distribution = new Map([[0, 1]]);
+
+  for (let length = 1; length < count; length += 1) {
+    const stepDistribution = comparisonsDistributionForLength(length);
+    const nextDistribution = new Map();
+
+    distribution.forEach((probability, total) => {
+      stepDistribution.forEach((stepProbability, steps) => {
+        const combined = total + steps;
+        const existing = nextDistribution.get(combined) || 0;
+        nextDistribution.set(combined, existing + probability * stepProbability);
+      });
+    });
+
+    distribution = nextDistribution;
+  }
+
+  return distribution;
+}
+
+function comparisonsDistributionForLength(length) {
+  if (lengthDistributionCache.has(length)) {
+    return lengthDistributionCache.get(length);
+  }
+
+  const distribution = new Map();
+
+  if (length <= 0) {
+    distribution.set(0, 1);
+    lengthDistributionCache.set(length, distribution);
+    return distribution;
+  }
+
+  const denominator = length + 1;
+
+  for (let target = 0; target <= length; target += 1) {
+    const steps = comparisonsForInsertion(length, target);
+    const current = distribution.get(steps) || 0;
+    distribution.set(steps, current + 1 / denominator);
+  }
+
+  lengthDistributionCache.set(length, distribution);
+  return distribution;
+}
+
+function comparisonsForInsertion(length, targetIndex) {
+  let low = 0;
+  let high = length;
+  let steps = 0;
+
+  while (low < high) {
+    steps += 1;
+    const mid = Math.floor((low + high) / 2);
+
+    if (targetIndex <= mid) {
+      high = mid;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  return steps;
+}
+
+function summarizeDistribution(distribution) {
+  const entries = Array.from(distribution.entries()).sort((a, b) => a[0] - b[0]);
+
+  if (!entries.length) {
+    return {
+      min: 0,
+      max: 0,
+      average: 0,
+      percentile90: 0,
+    };
+  }
+
+  let average = 0;
+  let percentile90 = entries[entries.length - 1][0];
+  let cumulative = 0;
+
+  entries.forEach(([value, probability]) => {
+    average += value * probability;
+  });
+
+  for (let index = 0; index < entries.length; index += 1) {
+    const [value, probability] = entries[index];
+    cumulative += probability;
+
+    if (cumulative >= 0.9) {
+      percentile90 = value;
+      break;
+    }
+  }
+
+  return {
+    min: entries[0][0],
+    max: entries[entries.length - 1][0],
+    average,
+    percentile90,
+  };
+}
+
+function formatDecimal(value) {
+  const options = {
+    maximumFractionDigits: 1,
+  };
+
+  if (Math.abs(value - Math.round(value)) < 0.05) {
+    return Math.round(value).toLocaleString();
+  }
+
+  return value.toLocaleString(undefined, options);
 }
