@@ -1,3 +1,17 @@
+// Auth UI elements
+const authSection = document.getElementById('auth-section');
+const authContainer = document.getElementById('auth-container');
+const authForm = document.getElementById('auth-form');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const authSubmit = document.getElementById('auth-submit');
+const authError = document.getElementById('auth-error');
+const loginTab = document.getElementById('login-tab');
+const signupTab = document.getElementById('signup-tab');
+const logoutButton = document.getElementById('logout-button');
+const userInfo = document.getElementById('user-info');
+
+// Ranking UI elements
 const itemsInput = document.getElementById('items-input');
 const startButton = document.getElementById('start-button');
 const optionAButton = document.getElementById('option-a');
@@ -14,6 +28,11 @@ const progressFill = document.getElementById('progress-fill');
 const statsToggle = document.getElementById('stats-toggle');
 const statsPanel = document.getElementById('stats-panel');
 
+// Auth state
+let isLogin = true;
+let currentUser = null;
+
+// Ranking state
 let items = [];
 let sortedItems = [];
 let currentIndex = 0;
@@ -65,6 +84,76 @@ if (statsToggle && statsPanel) {
 }
 
 itemsInput.addEventListener('input', updateStatsPanel);
+
+// Auth event listeners
+loginTab.addEventListener('click', () => {
+  isLogin = true;
+  loginTab.classList.add('active');
+  signupTab.classList.remove('active');
+  authSubmit.textContent = 'Sign In';
+  hideAuthError();
+});
+
+signupTab.addEventListener('click', () => {
+  isLogin = false;
+  signupTab.classList.add('active');
+  loginTab.classList.remove('active');
+  authSubmit.textContent = 'Sign Up';
+  hideAuthError();
+});
+
+authForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideAuthError();
+  
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  
+  if (!email || !password) {
+    showAuthError('Please enter both email and password.');
+    return;
+  }
+  
+  authSubmit.disabled = true;
+  authSubmit.textContent = isLogin ? 'Signing in...' : 'Signing up...';
+  
+  try {
+    if (isLogin) {
+      await window.firebaseAuthFunctions.signInWithEmailAndPassword(window.firebaseAuth, email, password);
+    } else {
+      await window.firebaseAuthFunctions.createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+    }
+    // Auth state change will handle UI updates
+  } catch (error) {
+    let message = 'An error occurred. Please try again.';
+    
+    if (error.code === 'auth/email-already-in-use') {
+      message = 'This email is already in use. Please sign in instead.';
+    } else if (error.code === 'auth/invalid-email') {
+      message = 'Invalid email address.';
+    } else if (error.code === 'auth/weak-password') {
+      message = 'Password should be at least 6 characters.';
+    } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+      message = 'Invalid email or password.';
+    } else if (error.code === 'auth/invalid-credential') {
+      message = 'Invalid email or password.';
+    }
+    
+    showAuthError(message);
+  } finally {
+    authSubmit.disabled = false;
+    authSubmit.textContent = isLogin ? 'Sign In' : 'Sign Up';
+  }
+});
+
+logoutButton.addEventListener('click', async () => {
+  try {
+    await window.firebaseAuthFunctions.signOut(window.firebaseAuth);
+    resetApp();
+  } catch (error) {
+    console.error('Sign out error:', error);
+  }
+});
 
 function parseItems(raw) {
   return raw
@@ -242,9 +331,75 @@ function resetApp() {
   itemsInput.focus();
 }
 
-// Autofocus the textarea for quick input.
-itemsInput.focus();
-updateStatsPanel();
+// Auth helper functions
+function showAuthError(message) {
+  authError.textContent = message;
+  authError.classList.remove('hidden');
+}
+
+function hideAuthError() {
+  authError.textContent = '';
+  authError.classList.add('hidden');
+}
+
+function showAuthUI() {
+  authSection.classList.remove('hidden');
+  authContainer.classList.add('hidden');
+  inputSection.classList.add('hidden');
+  comparisonSection.classList.add('hidden');
+  resultsSection.classList.add('hidden');
+}
+
+function showAppUI() {
+  authSection.classList.add('hidden');
+  authContainer.classList.remove('hidden');
+  inputSection.classList.remove('hidden');
+  itemsInput.focus();
+}
+
+function updateUserInfo(user) {
+  if (user && user.email) {
+    userInfo.textContent = `Signed in as: ${user.email}`;
+  } else {
+    userInfo.textContent = '';
+  }
+}
+
+// Initialize auth state listener
+window.initializeAuth = function() {
+  if (window.firebaseAuth && window.firebaseAuthFunctions) {
+    window.firebaseAuthFunctions.onAuthStateChanged(window.firebaseAuth, (user) => {
+      currentUser = user;
+      
+      if (user) {
+        // User is signed in
+        updateUserInfo(user);
+        showAppUI();
+      } else {
+        // User is signed out
+        showAuthUI();
+        updateUserInfo(null);
+      }
+    });
+  } else {
+    // Firebase failed to load, show auth UI with error
+    showAuthUI();
+    showAuthError('Firebase authentication is not available. Please check your connection or browser settings.');
+  }
+}
+
+// Initialize immediately if Firebase is already loaded, otherwise wait for module
+if (window.firebaseReady) {
+  window.initializeAuth();
+} else {
+  // Fallback: if Firebase doesn't load within a reasonable time, show error
+  setTimeout(() => {
+    if (!window.firebaseReady) {
+      window.initializeAuth();
+    }
+    updateStatsPanel();
+  }, 1000);
+}
 
 function initializeProgressTracking() {
   completedSteps = 0;
