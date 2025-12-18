@@ -34,6 +34,82 @@ header p {
   color: #5f6b8a;
 }
 
+.auth-container {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+#user-info {
+  color: #5f6b8a;
+  font-size: 0.95rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e1e6f3;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  color: #5f6b8a;
+  border: none;
+  border-radius: 0;
+  border-bottom: 3px solid transparent;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-tab:hover {
+  color: #4c6ef5;
+}
+
+.auth-tab.active {
+  color: #4c6ef5;
+  border-bottom-color: #4c6ef5;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #1f2a44;
+}
+
+.form-group input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem;
+  border: 1px solid #ccd5e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: inherit;
+}
+
+.form-group input:focus {
+  outline: 3px solid rgba(76, 110, 245, 0.25);
+  border-color: #4c6ef5;
+}
+
 .card {
   background: #fff;
   border-radius: 12px;

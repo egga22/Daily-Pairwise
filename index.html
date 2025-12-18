@@ -11,7 +11,31 @@
     <header>
       <h1>PairWise Ranking Helper</h1>
       <p>Paste a list of items, then compare them side-by-side to build a ranked order.</p>
+      <div id="auth-container" class="auth-container hidden">
+        <div id="user-info"></div>
+        <button id="logout-button" class="secondary">Sign Out</button>
+      </div>
     </header>
+
+    <section id="auth-section" class="card hidden">
+      <h2>Welcome! Please sign in to continue</h2>
+      <div class="auth-tabs">
+        <button id="login-tab" class="auth-tab active">Sign In</button>
+        <button id="signup-tab" class="auth-tab">Sign Up</button>
+      </div>
+      <form id="auth-form" class="auth-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" required placeholder="your.email@example.com" />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required placeholder="Enter your password" minlength="6" />
+        </div>
+        <p id="auth-error" class="error hidden" role="alert"></p>
+        <button type="submit" id="auth-submit" class="primary">Sign In</button>
+      </form>
+    </section>
 
     <section id="input-section" class="card">
       <h2>1. Provide items to rank</h2>
@@ -69,6 +93,40 @@
     <p>Built with a straightforward pairwise comparison algorithm to minimize the number of choices you need to make.</p>
   </footer>
 
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAyrnVfaWueSXTd8exSqQxDvc3Jk7RsktU",
+      authDomain: "daily-pairwise.firebaseapp.com",
+      projectId: "daily-pairwise",
+      storageBucket: "daily-pairwise.firebasestorage.app",
+      messagingSenderId: "506251088680",
+      appId: "1:506251088680:web:8b31755f0a03d65a3ff61d"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Make auth available globally for the main script
+    window.firebaseAuth = auth;
+    window.firebaseAuthFunctions = {
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    };
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
