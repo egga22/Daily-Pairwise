@@ -692,7 +692,7 @@ function generateListName() {
     return 'Untitled List';
   }
   
-  const firstItem = items[0].substring(0, 30);
+  const firstItem = items[0].slice(0, 30);
   if (items.length === 1) {
     return firstItem;
   }
