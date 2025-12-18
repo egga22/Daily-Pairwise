@@ -584,9 +584,6 @@ function loadList(list) {
   items = list.items || [];
   sortedItems = list.sortedItems || [];
   currentIndex = list.currentIndex || 0;
-  low = list.low || 0;
-  high = list.high || 0;
-  mid = list.mid || 0;
   totalSteps = list.totalSteps || 0;
   completedSteps = list.completedSteps || 0;
   
@@ -597,12 +594,11 @@ function loadList(list) {
     // List is complete
     showResults();
   } else if (sortedItems.length > 0) {
-    // In progress
+    // In progress - use prepareInsertion to properly initialize low/high
+    // for the current item being ranked (saved low/high values are stale
+    // from the previous item's completion state)
     inputSection.classList.add('hidden');
-    currentItem = items[currentIndex];
-    comparisonSection.classList.remove('hidden');
-    updateProgress();
-    compareNext();
+    prepareInsertion();
   } else {
     // Just started
     inputSection.classList.remove('hidden');
