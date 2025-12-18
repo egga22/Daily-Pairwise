@@ -366,7 +366,7 @@ function updateUserInfo(user) {
 }
 
 // Initialize auth state listener
-function initializeAuth() {
+window.initializeAuth = function() {
   if (window.firebaseAuth && window.firebaseAuthFunctions) {
     window.firebaseAuthFunctions.onAuthStateChanged(window.firebaseAuth, (user) => {
       currentUser = user;
@@ -388,15 +388,17 @@ function initializeAuth() {
   }
 }
 
-// Wait for Firebase to be initialized
-if (window.firebaseAuth) {
-  initializeAuth();
+// Initialize immediately if Firebase is already loaded, otherwise wait for module
+if (window.firebaseReady) {
+  window.initializeAuth();
 } else {
-  // Wait a bit for the module script to load
+  // Fallback: if Firebase doesn't load within a reasonable time, show error
   setTimeout(() => {
-    initializeAuth();
+    if (!window.firebaseReady) {
+      window.initializeAuth();
+    }
     updateStatsPanel();
-  }, 500);
+  }, 1000);
 }
 
 function initializeProgressTracking() {

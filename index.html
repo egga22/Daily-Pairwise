@@ -105,6 +105,9 @@
     } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
     // Your web app's Firebase configuration
+    // Note: Firebase API keys are safe to include in client-side code.
+    // They identify your Firebase project but don't grant access.
+    // Security is enforced through Firebase Security Rules, not by hiding the API key.
     const firebaseConfig = {
       apiKey: "AIzaSyAyrnVfaWueSXTd8exSqQxDvc3Jk7RsktU",
       authDomain: "daily-pairwise.firebaseapp.com",
@@ -126,6 +129,12 @@
       signOut,
       onAuthStateChanged
     };
+
+    // Notify the main script that Firebase is ready
+    window.firebaseReady = true;
+    if (window.initializeAuth) {
+      window.initializeAuth();
+    }
   </script>
   <script src="script.js"></script>
 </body>
