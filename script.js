@@ -6,10 +6,20 @@ const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const authSubmit = document.getElementById('auth-submit');
 const authError = document.getElementById('auth-error');
+const authSuccess = document.getElementById('auth-success');
 const loginTab = document.getElementById('login-tab');
 const signupTab = document.getElementById('signup-tab');
 const logoutButton = document.getElementById('logout-button');
 const userInfo = document.getElementById('user-info');
+const forgotPasswordButton = document.getElementById('forgot-password-button');
+const forgotPasswordContainer = document.getElementById('forgot-password-container');
+const guestButton = document.getElementById('guest-button');
+
+// List management UI elements
+const listModal = document.getElementById('list-modal');
+const savedListsContainer = document.getElementById('saved-lists-container');
+const newListButton = document.getElementById('new-list-button');
+const closeModalButton = document.getElementById('close-modal-button');
 
 // Ranking UI elements
 const itemsInput = document.getElementById('items-input');
@@ -31,6 +41,7 @@ const statsPanel = document.getElementById('stats-panel');
 // Auth state
 let isLogin = true;
 let currentUser = null;
+let isGuestMode = false;
 
 // Ranking state
 let items = [];
@@ -42,8 +53,13 @@ let high = 0;
 let mid = 0;
 let totalSteps = 0;
 let completedSteps = 0;
+let currentListId = null;
 
-startButton.addEventListener('click', () => {
+// Constants
+const MAX_LISTS_PER_USER = 3;
+const GUEST_STORAGE_KEY = 'guestList';
+
+startButton.addEventListener('click', async () => {
   const parsed = parseItems(itemsInput.value);
 
   if (parsed.length === 0) {
@@ -51,23 +67,33 @@ startButton.addEventListener('click', () => {
     return;
   }
 
+  // Check list limit for non-guest users
+  if (!isGuestMode) {
+    const canCreateList = await checkListLimit();
+    if (!canCreateList) {
+      showError(`You can only have ${MAX_LISTS_PER_USER} active lists at a time. Please complete or delete an existing list first.`);
+      return;
+    }
+  }
+
   hideError();
   items = parsed;
+  currentListId = null; // New list
   beginRanking();
 });
 
-optionAButton.addEventListener('click', () => {
+optionAButton.addEventListener('click', async () => {
   // The current item wins the comparison.
   markComparisonComplete();
   high = mid;
-  nextStep();
+  await nextStep();
 });
 
-optionBButton.addEventListener('click', () => {
+optionBButton.addEventListener('click', async () => {
   // The existing ranked item stays ahead.
   markComparisonComplete();
   low = mid + 1;
-  nextStep();
+  await nextStep();
 });
 
 restartButton.addEventListener('click', resetApp);
@@ -91,7 +117,11 @@ loginTab.addEventListener('click', () => {
   loginTab.classList.add('active');
   signupTab.classList.remove('active');
   authSubmit.textContent = 'Sign In';
+  if (forgotPasswordContainer) {
+    forgotPasswordContainer.classList.remove('hidden');
+  }
   hideAuthError();
+  hideAuthSuccess();
 });
 
 signupTab.addEventListener('click', () => {
@@ -99,7 +129,11 @@ signupTab.addEventListener('click', () => {
   signupTab.classList.add('active');
   loginTab.classList.remove('active');
   authSubmit.textContent = 'Sign Up';
+  if (forgotPasswordContainer) {
+    forgotPasswordContainer.classList.add('hidden');
+  }
   hideAuthError();
+  hideAuthSuccess();
 });
 
 authForm.addEventListener('submit', async (e) => {
@@ -148,11 +182,62 @@ authForm.addEventListener('submit', async (e) => {
 
 logoutButton.addEventListener('click', async () => {
   try {
-    await window.firebaseAuthFunctions.signOut(window.firebaseAuth);
-    resetApp();
+    if (isGuestMode) {
+      isGuestMode = false;
+      currentUser = null;
+      showAuthUI();
+      updateUserInfo(null);
+      resetApp();
+    } else {
+      await window.firebaseAuthFunctions.signOut(window.firebaseAuth);
+      isGuestMode = false;
+      resetApp();
+    }
   } catch (error) {
     console.error('Sign out error:', error);
   }
+});
+
+forgotPasswordButton.addEventListener('click', async () => {
+  const email = emailInput.value.trim();
+  
+  if (!email) {
+    showAuthError('Please enter your email address first.');
+    return;
+  }
+  
+  try {
+    await window.firebaseAuthFunctions.sendPasswordResetEmail(window.firebaseAuth, email);
+    showAuthSuccess('Password reset email sent! Check your inbox.');
+    emailInput.value = '';
+  } catch (error) {
+    let message = 'Failed to send password reset email.';
+    
+    if (error.code === 'auth/user-not-found') {
+      message = 'No account found with this email address.';
+    } else if (error.code === 'auth/invalid-email') {
+      message = 'Invalid email address.';
+    }
+    
+    showAuthError(message);
+  }
+});
+
+guestButton.addEventListener('click', () => {
+  isGuestMode = true;
+  currentUser = { uid: 'guest', email: 'Guest' };
+  showAppUI();
+  updateUserInfo(currentUser);
+  loadGuestList();
+});
+
+newListButton.addEventListener('click', () => {
+  hideListModal();
+  resetApp();
+});
+
+closeModalButton.addEventListener('click', () => {
+  hideListModal();
 });
 
 function parseItems(raw) {
@@ -172,7 +257,7 @@ function hideError() {
   errorMessage.classList.add('hidden');
 }
 
-function beginRanking() {
+async function beginRanking() {
   inputSection.classList.add('hidden');
   comparisonSection.classList.add('hidden');
   resultsSection.classList.add('hidden');
@@ -181,6 +266,9 @@ function beginRanking() {
   currentIndex = 0;
 
   initializeProgressTracking();
+
+  // Save initial state
+  await saveCurrentList();
 
   if (items.length === 1) {
     sortedItems = [...items];
@@ -209,10 +297,14 @@ function prepareInsertion() {
   compareNext();
 }
 
-function nextStep() {
+async function nextStep() {
   if (low >= high) {
     sortedItems.splice(low, 0, currentItem);
     currentIndex += 1;
+    
+    // Save progress after each item is ranked
+    await saveCurrentList();
+    
     prepareInsertion();
   } else {
     compareNext();
@@ -309,6 +401,7 @@ function resetApp() {
   mid = 0;
   totalSteps = 0;
   completedSteps = 0;
+  currentListId = null;
   itemsInput.value = '';
   resultsList.innerHTML = '';
   hideError();
@@ -359,23 +452,301 @@ function showAppUI() {
 
 function updateUserInfo(user) {
   if (user && user.email) {
-    userInfo.textContent = `Signed in as: ${user.email}`;
+    const prefix = isGuestMode ? 'Guest mode' : 'Signed in as:';
+    userInfo.textContent = `${prefix} ${user.email}`;
   } else {
     userInfo.textContent = '';
+  }
+}
+
+function showAuthSuccess(message) {
+  if (authSuccess) {
+    authSuccess.textContent = message;
+    authSuccess.classList.remove('hidden');
+  }
+}
+
+function hideAuthSuccess() {
+  if (authSuccess) {
+    authSuccess.textContent = '';
+    authSuccess.classList.add('hidden');
+  }
+}
+
+function showListModal() {
+  if (listModal) {
+    listModal.classList.remove('hidden');
+  }
+}
+
+function hideListModal() {
+  if (listModal) {
+    listModal.classList.add('hidden');
+  }
+}
+
+// Firebase Firestore functions for list management
+async function loadUserLists() {
+  if (isGuestMode) {
+    loadGuestList();
+    return;
+  }
+  
+  if (!currentUser || !window.firebaseDb || !window.firebaseDbFunctions) {
+    return;
+  }
+  
+  try {
+    const { collection, getDocs, query, orderBy } = window.firebaseDbFunctions;
+    const listsRef = collection(window.firebaseDb, `users/${currentUser.uid}/lists`);
+    const q = query(listsRef, orderBy('lastModified', 'desc'));
+    const snapshot = await getDocs(q);
+    
+    const lists = [];
+    snapshot.forEach((doc) => {
+      lists.push({ id: doc.id, ...doc.data() });
+    });
+    
+    if (lists.length > 0) {
+      displaySavedLists(lists);
+      showListModal();
+    }
+  } catch (error) {
+    console.error('Error loading lists:', error);
+  }
+}
+
+function displaySavedLists(lists) {
+  if (!savedListsContainer) return;
+  
+  savedListsContainer.innerHTML = '';
+  
+  lists.forEach((list) => {
+    const listItem = document.createElement('div');
+    listItem.className = 'saved-list-item';
+    
+    const title = document.createElement('h3');
+    title.textContent = list.name || 'Untitled List';
+    
+    const itemCount = document.createElement('p');
+    const totalItems = list.items?.length || 0;
+    const rankedItems = list.sortedItems?.length || 0;
+    itemCount.textContent = `${totalItems} items (${rankedItems} ranked)`;
+    
+    const progress = document.createElement('p');
+    const percentage = totalItems > 0 ? Math.round((rankedItems / totalItems) * 100) : 0;
+    progress.textContent = `Progress: ${percentage}%`;
+    
+    const lastModified = document.createElement('p');
+    if (list.lastModified?.toDate) {
+      lastModified.textContent = `Last modified: ${list.lastModified.toDate().toLocaleString()}`;
+    }
+    
+    const actions = document.createElement('div');
+    actions.className = 'saved-list-item-actions';
+    
+    const continueButton = document.createElement('button');
+    continueButton.textContent = 'Continue';
+    continueButton.className = 'primary';
+    continueButton.addEventListener('click', () => {
+      loadList(list);
+      hideListModal();
+    });
+    
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.className = 'secondary';
+    deleteButton.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (confirm('Are you sure you want to delete this list?')) {
+        await deleteList(list.id);
+        await loadUserLists();
+      }
+    });
+    
+    actions.appendChild(continueButton);
+    actions.appendChild(deleteButton);
+    
+    listItem.appendChild(title);
+    listItem.appendChild(itemCount);
+    listItem.appendChild(progress);
+    listItem.appendChild(lastModified);
+    listItem.appendChild(actions);
+    
+    savedListsContainer.appendChild(listItem);
+  });
+}
+
+function loadList(list) {
+  currentListId = list.id;
+  
+  // Restore items with IDs
+  items = list.items || [];
+  sortedItems = list.sortedItems || [];
+  currentIndex = list.currentIndex || 0;
+  low = list.low || 0;
+  high = list.high || 0;
+  mid = list.mid || 0;
+  totalSteps = list.totalSteps || 0;
+  completedSteps = list.completedSteps || 0;
+  
+  // Update UI
+  itemsInput.value = items.join('\n');
+  
+  if (currentIndex >= items.length) {
+    // List is complete
+    showResults();
+  } else if (sortedItems.length > 0) {
+    // In progress
+    inputSection.classList.add('hidden');
+    currentItem = items[currentIndex];
+    comparisonSection.classList.remove('hidden');
+    updateProgress();
+    compareNext();
+  } else {
+    // Just started
+    inputSection.classList.remove('hidden');
+  }
+}
+
+async function saveCurrentList() {
+  if (isGuestMode) {
+    saveGuestList();
+    return;
+  }
+  
+  if (!currentUser || !window.firebaseDb || !window.firebaseDbFunctions) {
+    return;
+  }
+  
+  try {
+    const { doc, setDoc, serverTimestamp } = window.firebaseDbFunctions;
+    
+    // Generate list ID if not exists
+    if (!currentListId) {
+      currentListId = `list_${Date.now()}`;
+    }
+    
+    const listData = {
+      name: generateListName(),
+      items: items,
+      sortedItems: sortedItems,
+      currentIndex: currentIndex,
+      low: low,
+      high: high,
+      mid: mid,
+      totalSteps: totalSteps,
+      completedSteps: completedSteps,
+      lastModified: serverTimestamp()
+    };
+    
+    const listRef = doc(window.firebaseDb, `users/${currentUser.uid}/lists/${currentListId}`);
+    await setDoc(listRef, listData);
+  } catch (error) {
+    console.error('Error saving list:', error);
+  }
+}
+
+async function deleteList(listId) {
+  if (isGuestMode) {
+    localStorage.removeItem(GUEST_STORAGE_KEY);
+    return;
+  }
+  
+  if (!currentUser || !window.firebaseDb || !window.firebaseDbFunctions) {
+    return;
+  }
+  
+  try {
+    const { doc, deleteDoc } = window.firebaseDbFunctions;
+    const listRef = doc(window.firebaseDb, `users/${currentUser.uid}/lists/${listId}`);
+    await deleteDoc(listRef);
+  } catch (error) {
+    console.error('Error deleting list:', error);
+  }
+}
+
+async function checkListLimit() {
+  if (isGuestMode) {
+    return true;
+  }
+  
+  if (!currentUser || !window.firebaseDb || !window.firebaseDbFunctions) {
+    return true;
+  }
+  
+  try {
+    const { collection, getDocs } = window.firebaseDbFunctions;
+    const listsRef = collection(window.firebaseDb, `users/${currentUser.uid}/lists`);
+    const snapshot = await getDocs(listsRef);
+    
+    return snapshot.size < MAX_LISTS_PER_USER;
+  } catch (error) {
+    console.error('Error checking list limit:', error);
+    return true;
+  }
+}
+
+function generateListName() {
+  if (items.length === 0) {
+    return 'Untitled List';
+  }
+  
+  const firstItem = items[0].slice(0, 30);
+  if (items.length === 1) {
+    return firstItem;
+  }
+  
+  return `${firstItem}... (${items.length} items)`;
+}
+
+// Guest mode functions
+function saveGuestList() {
+  const listData = {
+    items: items,
+    sortedItems: sortedItems,
+    currentIndex: currentIndex,
+    low: low,
+    high: high,
+    mid: mid,
+    totalSteps: totalSteps,
+    completedSteps: completedSteps,
+    lastModified: Date.now()
+  };
+  
+  try {
+    localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(listData));
+  } catch (error) {
+    console.error('Error saving guest list:', error);
+  }
+}
+
+function loadGuestList() {
+  try {
+    const stored = localStorage.getItem(GUEST_STORAGE_KEY);
+    if (stored) {
+      const list = JSON.parse(stored);
+      loadList({ ...list, id: 'guest' });
+    }
+  } catch (error) {
+    console.error('Error loading guest list:', error);
   }
 }
 
 // Initialize auth state listener
 window.initializeAuth = function() {
   if (window.firebaseAuth && window.firebaseAuthFunctions) {
-    window.firebaseAuthFunctions.onAuthStateChanged(window.firebaseAuth, (user) => {
+    window.firebaseAuthFunctions.onAuthStateChanged(window.firebaseAuth, async (user) => {
       currentUser = user;
       
-      if (user) {
+      if (user && !isGuestMode) {
         // User is signed in
         updateUserInfo(user);
         showAppUI();
-      } else {
+        
+        // Check for saved lists
+        await loadUserLists();
+      } else if (!isGuestMode) {
         // User is signed out
         showAuthUI();
         updateUserInfo(null);

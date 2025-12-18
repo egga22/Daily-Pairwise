@@ -32,8 +32,14 @@
           <label for="password">Password</label>
           <input type="password" id="password" required placeholder="Enter your password" minlength="6" autocomplete="current-password" />
         </div>
+        <div id="forgot-password-container" class="forgot-password-container">
+          <button type="button" id="forgot-password-button" class="link-button">Forgot Password?</button>
+        </div>
         <p id="auth-error" class="error hidden" role="alert"></p>
+        <p id="auth-success" class="success hidden" role="alert"></p>
         <button type="submit" id="auth-submit" class="primary">Sign In</button>
+        <button type="button" id="guest-button" class="secondary">Continue as Guest</button>
+        <p class="guest-warning">Guest mode: Progress saved only in this browser. Limited to 1 active list.</p>
       </form>
     </section>
 
@@ -87,6 +93,19 @@
       <ol id="results-list"></ol>
       <button id="restart-button" class="secondary">Start Over</button>
     </section>
+
+    <!-- List Management Modal -->
+    <div id="list-modal" class="modal hidden">
+      <div class="modal-content">
+        <h2>Your Saved Lists</h2>
+        <p>You have saved lists. Would you like to continue one or start fresh?</p>
+        <div id="saved-lists-container" class="saved-lists"></div>
+        <div class="modal-actions">
+          <button id="new-list-button" class="primary">Start New List</button>
+          <button id="close-modal-button" class="secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
   </main>
 
   <footer>
@@ -101,8 +120,22 @@
       createUserWithEmailAndPassword, 
       signInWithEmailAndPassword,
       signOut,
-      onAuthStateChanged
+      onAuthStateChanged,
+      sendPasswordResetEmail
     } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      getDoc,
+      getDocs,
+      deleteDoc,
+      query,
+      orderBy,
+      limit,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
     // Your web app's Firebase configuration
     // Note: Firebase API keys are safe to include in client-side code.
@@ -120,14 +153,29 @@
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    // Make auth available globally for the main script
+    // Make auth and firestore available globally for the main script
     window.firebaseAuth = auth;
+    window.firebaseDb = db;
     window.firebaseAuthFunctions = {
       createUserWithEmailAndPassword,
       signInWithEmailAndPassword,
       signOut,
-      onAuthStateChanged
+      onAuthStateChanged,
+      sendPasswordResetEmail
+    };
+    window.firebaseDbFunctions = {
+      collection,
+      doc,
+      setDoc,
+      getDoc,
+      getDocs,
+      deleteDoc,
+      query,
+      orderBy,
+      limit,
+      serverTimestamp
     };
 
     // Notify the main script that Firebase is ready
