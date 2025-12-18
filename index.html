@@ -26,11 +26,11 @@
       <form id="auth-form" class="auth-form">
         <div class="form-group">
           <label for="email">Email</label>
-          <input type="email" id="email" required placeholder="your.email@example.com" />
+          <input type="email" id="email" required placeholder="your.email@example.com" autocomplete="email" />
         </div>
         <div class="form-group">
           <label for="password">Password</label>
-          <input type="password" id="password" required placeholder="Enter your password" minlength="6" />
+          <input type="password" id="password" required placeholder="Enter your password" minlength="6" autocomplete="current-password" />
         </div>
         <p id="auth-error" class="error hidden" role="alert"></p>
         <button type="submit" id="auth-submit" class="primary">Sign In</button>
