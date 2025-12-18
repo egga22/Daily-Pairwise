@@ -182,9 +182,17 @@ authForm.addEventListener('submit', async (e) => {
 
 logoutButton.addEventListener('click', async () => {
   try {
-    await window.firebaseAuthFunctions.signOut(window.firebaseAuth);
-    isGuestMode = false;
-    resetApp();
+    if (isGuestMode) {
+      isGuestMode = false;
+      currentUser = null;
+      showAuthUI();
+      updateUserInfo(null);
+      resetApp();
+    } else {
+      await window.firebaseAuthFunctions.signOut(window.firebaseAuth);
+      isGuestMode = false;
+      resetApp();
+    }
   } catch (error) {
     console.error('Sign out error:', error);
   }
@@ -480,10 +488,11 @@ function hideListModal() {
 // Firebase Firestore functions for list management
 async function loadUserLists() {
   if (isGuestMode) {
-    return loadGuestList();
+    loadGuestList();
+    return;
   }
   
-  if (!currentUser || !window.firebaseDb) {
+  if (!currentUser || !window.firebaseDb || !window.firebaseDbFunctions) {
     return;
   }
   
@@ -606,7 +615,7 @@ async function saveCurrentList() {
     return;
   }
   
-  if (!currentUser || !window.firebaseDb) {
+  if (!currentUser || !window.firebaseDb || !window.firebaseDbFunctions) {
     return;
   }
   
@@ -644,7 +653,7 @@ async function deleteList(listId) {
     return;
   }
   
-  if (!currentUser || !window.firebaseDb) {
+  if (!currentUser || !window.firebaseDb || !window.firebaseDbFunctions) {
     return;
   }
   
@@ -662,7 +671,7 @@ async function checkListLimit() {
     return true;
   }
   
-  if (!currentUser || !window.firebaseDb) {
+  if (!currentUser || !window.firebaseDb || !window.firebaseDbFunctions) {
     return true;
   }
   
