@@ -40,6 +40,9 @@ const statsPanel = document.getElementById('stats-panel');
 
 // Mode selection elements
 const modeRadios = document.querySelectorAll('input[name="ranking-mode"]');
+const dailyModeOption = document.getElementById('daily-mode-option');
+const dailyModeRadio = document.getElementById('daily-mode-radio');
+const dailyModeLoginMessage = document.getElementById('daily-mode-login-message');
 const dailyOptions = document.getElementById('daily-options');
 const dailyEmailInput = document.getElementById('daily-email');
 const dailyTimeInput = document.getElementById('daily-time');
@@ -75,9 +78,19 @@ modeRadios.forEach(radio => {
   radio.addEventListener('change', (e) => {
     rankingMode = e.target.value;
     if (rankingMode === 'daily') {
+      // Check if user is logged in (not guest mode)
+      if (isGuestMode || !currentUser) {
+        // Prevent selection and show message
+        e.preventDefault();
+        document.querySelector('input[name="ranking-mode"][value="basic"]').checked = true;
+        rankingMode = 'basic';
+        showError('Daily Mode is only available to logged-in users. Please sign in to use this feature.');
+        return;
+      }
+      
       dailyOptions.classList.remove('hidden');
-      // Pre-fill email if user is logged in
-      if (currentUser && currentUser.email && !isGuestMode) {
+      // Pre-fill email with user's account email (read-only)
+      if (currentUser && currentUser.email) {
         dailyEmailInput.value = currentUser.email;
       }
     } else {
@@ -96,18 +109,15 @@ startButton.addEventListener('click', async () => {
 
   // Validate daily mode inputs
   if (rankingMode === 'daily') {
-    dailyEmail = dailyEmailInput.value.trim();
+    // Ensure user is logged in
+    if (isGuestMode || !currentUser || !currentUser.email) {
+      showError('Daily Mode is only available to logged-in users. Please sign in first.');
+      return;
+    }
+    
+    // Use the logged-in user's email
+    dailyEmail = currentUser.email;
     dailyTime = dailyTimeInput.value;
-    
-    if (!dailyEmail) {
-      showError('Please provide an email address for daily mode.');
-      return;
-    }
-    
-    if (!isValidEmail(dailyEmail)) {
-      showError('Please provide a valid email address.');
-      return;
-    }
     
     if (!dailyTime) {
       showError('Please select a preferred time for daily emails.');
@@ -571,6 +581,41 @@ function updateUserInfo(user) {
     userInfo.textContent = `${prefix} ${user.email}`;
   } else {
     userInfo.textContent = '';
+  }
+  
+  // Update daily mode availability
+  updateDailyModeAvailability();
+}
+
+function updateDailyModeAvailability() {
+  if (isGuestMode || !currentUser || !currentUser.email) {
+    // Disable daily mode for guest users
+    if (dailyModeOption) {
+      dailyModeOption.classList.add('disabled');
+    }
+    if (dailyModeRadio) {
+      dailyModeRadio.disabled = true;
+    }
+    if (dailyModeLoginMessage) {
+      dailyModeLoginMessage.classList.remove('hidden');
+    }
+    // Reset to basic mode if daily was selected
+    if (rankingMode === 'daily') {
+      document.querySelector('input[name="ranking-mode"][value="basic"]').checked = true;
+      rankingMode = 'basic';
+      dailyOptions.classList.add('hidden');
+    }
+  } else {
+    // Enable daily mode for logged-in users
+    if (dailyModeOption) {
+      dailyModeOption.classList.remove('disabled');
+    }
+    if (dailyModeRadio) {
+      dailyModeRadio.disabled = false;
+    }
+    if (dailyModeLoginMessage) {
+      dailyModeLoginMessage.classList.add('hidden');
+    }
   }
 }
 

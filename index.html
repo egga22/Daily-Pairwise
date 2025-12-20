@@ -58,21 +58,25 @@
               <small>Complete all comparisons now</small>
             </span>
           </label>
-          <label class="mode-option">
-            <input type="radio" name="ranking-mode" value="daily">
+          <label class="mode-option" id="daily-mode-option">
+            <input type="radio" name="ranking-mode" value="daily" id="daily-mode-radio">
             <span class="mode-label">
               <strong>Daily Mode</strong>
               <small>Receive one comparison per day via email</small>
             </span>
           </label>
         </div>
+        <p id="daily-mode-login-message" class="info-message hidden">
+          <small>Daily Mode is only available to logged-in users. Please sign in to use this feature.</small>
+        </p>
       </div>
 
       <div id="daily-options" class="daily-options hidden">
         <h3>Daily Email Settings</h3>
         <div class="form-group">
           <label for="daily-email">Email Address</label>
-          <input type="email" id="daily-email" placeholder="your.email@example.com" />
+          <input type="email" id="daily-email" placeholder="your.email@example.com" readonly />
+          <small class="field-hint">Using your account email</small>
         </div>
         <div class="form-group">
           <label for="daily-time">Preferred Time</label>

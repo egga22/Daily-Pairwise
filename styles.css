@@ -494,6 +494,38 @@ footer {
   font-weight: normal;
 }
 
+.mode-option.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mode-option.disabled:hover {
+  border-color: #e1e6f3;
+  background: #fff;
+}
+
+.mode-option.disabled input[type="radio"] {
+  cursor: not-allowed;
+}
+
+.mode-option.disabled .mode-label {
+  cursor: not-allowed;
+}
+
+.info-message {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 6px;
+  color: #5f6b8a;
+}
+
+.info-message small {
+  display: block;
+  font-size: 0.85rem;
+}
+
 .daily-options {
   margin: 1.5rem 0;
   padding: 1rem;
@@ -540,6 +572,19 @@ footer {
 .daily-options input[type="time"]:focus {
   outline: none;
   border-color: #4c6ef5;
+}
+
+.daily-options input[type="email"][readonly] {
+  background-color: #f0f2f8;
+  cursor: not-allowed;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: #5f6b8a;
+  font-weight: normal;
 }
 
 @media (max-width: 600px) {
