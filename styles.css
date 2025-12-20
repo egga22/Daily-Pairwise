@@ -431,6 +431,117 @@ footer {
   flex-wrap: wrap;
 }
 
+.mode-selection {
+  margin: 1.5rem 0;
+}
+
+.mode-selection h3 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  color: #1f2a44;
+}
+
+.mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mode-option {
+  display: flex;
+  align-items: flex-start;
+  padding: 1rem;
+  border: 2px solid #e1e6f3;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-option:hover {
+  border-color: #4c6ef5;
+  background: #f8f9ff;
+}
+
+.mode-option input[type="radio"] {
+  margin-top: 0.2rem;
+  margin-right: 0.75rem;
+  cursor: pointer;
+}
+
+.mode-option input[type="radio"]:checked + .mode-label {
+  color: #4c6ef5;
+}
+
+.mode-option input[type="radio"]:checked {
+  accent-color: #4c6ef5;
+}
+
+.mode-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  cursor: pointer;
+}
+
+.mode-label strong {
+  font-size: 1rem;
+  color: #1f2a44;
+}
+
+.mode-label small {
+  font-size: 0.85rem;
+  color: #5f6b8a;
+  font-weight: normal;
+}
+
+.daily-options {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8f9ff;
+  border-radius: 8px;
+  border: 1px solid #dfe4ff;
+}
+
+.daily-options h3 {
+  font-size: 1rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #1f2a44;
+}
+
+.daily-options .form-group {
+  margin-bottom: 1rem;
+}
+
+.daily-options .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.daily-options label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1f2a44;
+}
+
+.daily-options input[type="email"],
+.daily-options input[type="time"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e1e6f3;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.daily-options input[type="email"]:focus,
+.daily-options input[type="time"]:focus {
+  outline: none;
+  border-color: #4c6ef5;
+}
+
 @media (max-width: 600px) {
   header h1 {
     font-size: 1.75rem;

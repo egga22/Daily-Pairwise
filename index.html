@@ -47,6 +47,39 @@
       <h2>1. Provide items to rank</h2>
       <label for="items-input" class="sr-only">Items to rank</label>
       <textarea id="items-input" rows="8" placeholder="Enter one item per line or separate with commas"></textarea>
+      
+      <div class="mode-selection">
+        <h3>Ranking Mode</h3>
+        <div class="mode-options">
+          <label class="mode-option">
+            <input type="radio" name="ranking-mode" value="basic" checked>
+            <span class="mode-label">
+              <strong>Basic Mode</strong>
+              <small>Complete all comparisons now</small>
+            </span>
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="ranking-mode" value="daily">
+            <span class="mode-label">
+              <strong>Daily Mode</strong>
+              <small>Receive one comparison per day via email</small>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div id="daily-options" class="daily-options hidden">
+        <h3>Daily Email Settings</h3>
+        <div class="form-group">
+          <label for="daily-email">Email Address</label>
+          <input type="email" id="daily-email" placeholder="your.email@example.com" />
+        </div>
+        <div class="form-group">
+          <label for="daily-time">Preferred Time</label>
+          <input type="time" id="daily-time" value="09:00" />
+        </div>
+      </div>
+
       <p id="error-message" class="error hidden" role="alert"></p>
       <div class="input-actions">
         <button id="start-button" class="primary">Start Ranking</button>
