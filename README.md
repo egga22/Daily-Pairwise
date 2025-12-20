@@ -71,9 +71,13 @@ wrangler secret put SENDER_NAME
 
 # Deploy to Cloudflare
 wrangler deploy
+
+# After deployment, update wrangler.toml with your worker URL and redeploy
+# Edit workers/wrangler.toml to add: WORKER_URL = "https://your-worker-url.workers.dev"
+wrangler deploy
 ```
 
-After deployment, update the worker URL in `workers/src/index.js` and the frontend URL in `script.js`.
+After deployment, update the worker URL in `workers/wrangler.toml` (set the `WORKER_URL` variable) and update the backend URL in `script.js` if deploying to production.
 
 ### Option 2: Express.js Backend (Legacy)
 

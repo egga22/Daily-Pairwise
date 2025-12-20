@@ -160,11 +160,20 @@ async function sendPairwiseEmail(toEmail, itemA, itemB, listId, pairId, env) {
   const baseUrl = env.FRONTEND_URL || 'https://egga22.github.io/Daily-Pairwise';
   
   // Construct choice URLs - these will point to the worker's /api/choice endpoint
-  // We need to determine the worker's URL dynamically or use a configured value
-  // For now, we'll use a placeholder that should be replaced with actual worker URL
-  const workerUrl = 'https://daily-pairwise.YOUR-SUBDOMAIN.workers.dev';
-  const choiceUrlA = `${workerUrl}/api/choice/${listId}/${pairId}/a`;
-  const choiceUrlB = `${workerUrl}/api/choice/${listId}/${pairId}/b`;
+  // The worker URL should be configured in wrangler.toml as WORKER_URL environment variable
+  // If not set, emails will indicate users should visit the website directly
+  const workerUrl = env.WORKER_URL;
+  
+  let choiceUrlA, choiceUrlB;
+  if (workerUrl) {
+    choiceUrlA = `${workerUrl}/api/choice/${listId}/${pairId}/a`;
+    choiceUrlB = `${workerUrl}/api/choice/${listId}/${pairId}/b`;
+  } else {
+    // Fallback: direct users to the frontend (they'll need to make choice manually)
+    console.warn('WORKER_URL not configured - email links will redirect to frontend instead of recording choice');
+    choiceUrlA = `${baseUrl}?list=${listId}&continue=true`;
+    choiceUrlB = `${baseUrl}?list=${listId}&continue=true`;
+  }
   
   const htmlContent = generateEmailHTML(itemA, itemB, choiceUrlA, choiceUrlB, baseUrl, listId);
   const textContent = generateEmailText(itemA, itemB, baseUrl, listId);

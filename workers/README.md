@@ -46,13 +46,26 @@ wrangler secret put SENDER_NAME
 # Enter your sender name (e.g., "Daily Pairwise")
 ```
 
-4. Update `wrangler.toml` with your frontend URL if needed (default is the GitHub Pages URL).
-
-5. **Important**: After deploying, update the `workerUrl` variable in `src/index.js` (line 170) with your actual worker URL:
-```javascript
-const workerUrl = 'https://daily-pairwise.YOUR-SUBDOMAIN.workers.dev';
+4. Deploy the worker to get your worker URL:
+```bash
+npm run deploy
+# or
+wrangler deploy
 ```
-Replace `YOUR-SUBDOMAIN` with your actual Cloudflare Workers subdomain, then redeploy.
+
+After deployment, Wrangler will output your worker's URL (e.g., `https://daily-pairwise.YOUR-SUBDOMAIN.workers.dev`).
+
+5. Update `wrangler.toml` with your worker URL and frontend URL:
+```toml
+[vars]
+FRONTEND_URL = "https://egga22.github.io/Daily-Pairwise"  # Your frontend URL
+WORKER_URL = "https://daily-pairwise.YOUR-SUBDOMAIN.workers.dev"  # Your worker URL from step 4
+```
+
+6. Redeploy with the updated configuration:
+```bash
+wrangler deploy
+```
 
 ### Development
 
@@ -138,7 +151,8 @@ In production, this would:
 ## Environment Variables
 
 Set in `wrangler.toml`:
-- `FRONTEND_URL`: URL of the frontend application
+- `FRONTEND_URL`: URL of the frontend application (default: `https://egga22.github.io/Daily-Pairwise`)
+- `WORKER_URL`: URL of the deployed worker (e.g., `https://daily-pairwise.YOUR-SUBDOMAIN.workers.dev`) - required for email choice links to work
 
 Set as secrets (encrypted):
 - `MAILJET_API_KEY`: Your Mailjet API key
