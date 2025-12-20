@@ -78,10 +78,10 @@ modeRadios.forEach(radio => {
   radio.addEventListener('change', (e) => {
     rankingMode = e.target.value;
     if (rankingMode === 'daily') {
-      // Check if user is logged in (not guest mode)
-      if (isGuestMode || !currentUser) {
-        // Prevent selection and show message
-        e.preventDefault();
+      // Check if user is logged in (not guest mode) and has valid email
+      if (isGuestMode || !currentUser || !currentUser.email || currentUser.email === 'Guest') {
+        // Prevent selection and reset to basic mode
+        e.target.checked = false;
         document.querySelector('input[name="ranking-mode"][value="basic"]').checked = true;
         rankingMode = 'basic';
         showError('Daily Mode is only available to logged-in users. Please sign in to use this feature.');
@@ -90,9 +90,7 @@ modeRadios.forEach(radio => {
       
       dailyOptions.classList.remove('hidden');
       // Pre-fill email with user's account email (read-only)
-      if (currentUser && currentUser.email) {
-        dailyEmailInput.value = currentUser.email;
-      }
+      dailyEmailInput.value = currentUser.email;
     } else {
       dailyOptions.classList.add('hidden');
     }
@@ -109,8 +107,8 @@ startButton.addEventListener('click', async () => {
 
   // Validate daily mode inputs
   if (rankingMode === 'daily') {
-    // Ensure user is logged in
-    if (isGuestMode || !currentUser || !currentUser.email) {
+    // Ensure user is logged in with valid email
+    if (isGuestMode || !currentUser || !currentUser.email || currentUser.email === 'Guest') {
       showError('Daily Mode is only available to logged-in users. Please sign in first.');
       return;
     }
@@ -588,7 +586,7 @@ function updateUserInfo(user) {
 }
 
 function updateDailyModeAvailability() {
-  if (isGuestMode || !currentUser || !currentUser.email) {
+  if (isGuestMode || !currentUser || !currentUser.email || currentUser.email === 'Guest') {
     // Disable daily mode for guest users
     if (dailyModeOption) {
       dailyModeOption.classList.add('disabled');
