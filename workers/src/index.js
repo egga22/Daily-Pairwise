@@ -72,9 +72,13 @@ function handleHealth() {
 
 async function handleChoice(path, env) {
   // Parse path: /api/choice/:listId/:pairId/:choice
+  // Expected format: /api/choice/:listId/:pairId/:choice
+  // After split and filter: ['api', 'choice', 'listId', 'pairId', 'choice']
   const parts = path.split('/').filter(p => p);
-  if (parts.length !== 5) {
-    return new Response('Invalid path', { status: 400 });
+  const EXPECTED_PATH_PARTS = 5; // api, choice, listId, pairId, choice
+  
+  if (parts.length !== EXPECTED_PATH_PARTS) {
+    return new Response('Invalid path. Expected format: /api/choice/:listId/:pairId/:choice', { status: 400 });
   }
   
   const listId = parts[2];
@@ -161,7 +165,6 @@ async function sendPairwiseEmail(toEmail, itemA, itemB, listId, pairId, env) {
   
   // Construct choice URLs - these will point to the worker's /api/choice endpoint
   // The worker URL should be configured in wrangler.toml as WORKER_URL environment variable
-  // If not set, emails will indicate users should visit the website directly
   const workerUrl = env.WORKER_URL;
   
   let choiceUrlA, choiceUrlB;
@@ -169,10 +172,12 @@ async function sendPairwiseEmail(toEmail, itemA, itemB, listId, pairId, env) {
     choiceUrlA = `${workerUrl}/api/choice/${listId}/${pairId}/a`;
     choiceUrlB = `${workerUrl}/api/choice/${listId}/${pairId}/b`;
   } else {
-    // Fallback: direct users to the frontend (they'll need to make choice manually)
-    console.warn('WORKER_URL not configured - email links will redirect to frontend instead of recording choice');
-    choiceUrlA = `${baseUrl}?list=${listId}&continue=true`;
-    choiceUrlB = `${baseUrl}?list=${listId}&continue=true`;
+    // Fallback: direct users to the frontend with choice parameter
+    // Note: Without WORKER_URL, choices won't be automatically recorded by the worker
+    // The frontend would need to handle the choice parameter if implemented
+    console.warn('WORKER_URL not configured - email links will redirect to frontend with choice parameter');
+    choiceUrlA = `${baseUrl}?list=${listId}&choice=a&continue=true`;
+    choiceUrlB = `${baseUrl}?list=${listId}&choice=b&continue=true`;
   }
   
   const htmlContent = generateEmailHTML(itemA, itemB, choiceUrlA, choiceUrlB, baseUrl, listId);
