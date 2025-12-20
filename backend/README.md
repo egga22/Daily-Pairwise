@@ -68,10 +68,16 @@ The service includes a cron job that runs hourly to check for scheduled emails. 
 
 ## Mailjet Configuration
 
-API Key: `0366191e471dffdb88517f2e7e8285ec`
-Secret Key: `bf09ec42e41212d806459d861649a640`
+The service uses Mailjet API for sending emails. Configure your Mailjet credentials in the `.env` file:
 
-These credentials are configured in the `.env` file.
+```
+MAILJET_API_KEY=your_mailjet_api_key
+MAILJET_SECRET_KEY=your_mailjet_secret_key
+SENDER_EMAIL=noreply@yourdomain.com
+SENDER_NAME=Daily Pairwise
+```
+
+**Important**: Make sure your sender email domain is verified with Mailjet before sending emails in production.
 
 ## Integration with Frontend
 

@@ -67,7 +67,8 @@ let dailyTime = '09:00';
 // Constants
 const MAX_LISTS_PER_USER = 3;
 const GUEST_STORAGE_KEY = 'guestList';
-const BACKEND_URL = 'http://localhost:3000';
+// Backend URL - can be overridden via window.BACKEND_URL for different environments
+const BACKEND_URL = window.BACKEND_URL || 'http://localhost:3000';
 
 // Mode selection event listeners
 modeRadios.forEach(radio => {

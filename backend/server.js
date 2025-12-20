@@ -7,6 +7,8 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const SENDER_EMAIL = process.env.SENDER_EMAIL || 'noreply@daily-pairwise.com';
+const SENDER_NAME = process.env.SENDER_NAME || 'Daily Pairwise';
 
 // Middleware
 app.use(cors());
@@ -186,8 +188,8 @@ async function sendPairwiseEmail(toEmail, itemA, itemB, listId, pairId) {
       Messages: [
         {
           From: {
-            Email: 'noreply@daily-pairwise.com',
-            Name: 'Daily Pairwise'
+            Email: SENDER_EMAIL,
+            Name: SENDER_NAME
           },
           To: [
             {
