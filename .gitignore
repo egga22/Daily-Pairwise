@@ -3,3 +3,10 @@ backend/.env
 backend/node_modules/
 backend/*.log
 backend/package-lock.json
+
+# Workers environment files
+workers/node_modules/
+workers/.wrangler/
+workers/dist/
+workers/*.log
+workers/package-lock.json

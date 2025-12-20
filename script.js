@@ -71,6 +71,9 @@ let dailyTime = '09:00';
 const MAX_LISTS_PER_USER = 3;
 const GUEST_STORAGE_KEY = 'guestList';
 // Backend URL - can be overridden via window.BACKEND_URL for different environments
+// For production deployment with Cloudflare Workers, set this to your worker URL:
+// const BACKEND_URL = window.BACKEND_URL || 'https://daily-pairwise.YOUR-SUBDOMAIN.workers.dev';
+// For local development with Express.js backend:
 const BACKEND_URL = window.BACKEND_URL || 'http://localhost:3000';
 
 // Mode selection event listeners

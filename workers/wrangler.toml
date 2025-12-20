@@ -1,0 +1,9 @@
+name = "daily-pairwise"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[triggers]
+crons = ["0 * * * *"]  # Run every hour for scheduled emails
+
+[vars]
+FRONTEND_URL = "https://egga22.github.io/Daily-Pairwise"
