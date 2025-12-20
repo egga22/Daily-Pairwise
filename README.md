@@ -6,18 +6,53 @@ This repository contains a lightweight, client-side web application that helps y
 
 - **Firebase Authentication**: Secure email/password authentication
 - **Pairwise Comparison**: Intelligent ranking algorithm that minimizes comparisons
+- **Basic Mode**: Complete all comparisons immediately on the website
+- **Daily Mode**: Receive one pairwise comparison per day via email
 - **Progress Tracking**: Visual progress bar and statistics
 - **Responsive Design**: Works on desktop and mobile devices
+
+## Ranking Modes
+
+### Basic Mode
+Complete all pairwise comparisons in one session directly on the website. Perfect for quick rankings or when you want to complete everything at once.
+
+### Daily Mode
+Receive one pairwise comparison per day via email at your preferred time. This mode is ideal for:
+- Thoughtful decision-making over time
+- Avoiding decision fatigue
+- Reflecting on choices day by day
+
+When you select Daily Mode:
+1. Choose your preferred time for daily emails
+2. Receive an email with two options to compare
+3. Click your preferred option directly in the email
+4. Come back to the website anytime to complete more comparisons
 
 ## Getting started
 
 1. Open [`index.html`](index.html) in your browser.
 2. **Sign in or create an account** using your email and password.
 3. Paste a list of items (one per line or separated with commas).
-4. Step through the comparisons by picking the option you prefer each time.
-5. Review the final ordered list generated from your choices.
+4. **Choose your ranking mode**:
+   - **Basic Mode**: Start ranking immediately
+   - **Daily Mode**: Set your email and preferred time for daily comparisons
+5. Step through the comparisons by picking the option you prefer each time.
+6. Review the final ordered list generated from your choices.
 
 The app performs an insertion sort guided by your selections, minimizing the total number of comparisons needed to produce the final ranking.
+
+## Backend Service
+
+The Daily Mode feature requires a backend service to send emails. See the [backend README](backend/README.md) for setup instructions.
+
+To run the backend:
+```bash
+cd backend
+npm install
+npm start
+```
+
+The backend uses the Mailjet API for sending emails.
 
 ## Firebase Authentication
 
@@ -37,4 +72,6 @@ To use your own Firebase project:
 
 ## Development notes
 
-No build step or server is required—the project uses plain HTML, CSS, and vanilla JavaScript. To iterate quickly, open `index.html` with a live-reload capable development server such as `npx serve` or `python -m http.server`.
+No build step or server is required for the frontend—the project uses plain HTML, CSS, and vanilla JavaScript. To iterate quickly, open `index.html` with a live-reload capable development server such as `npx serve` or `python -m http.server`.
+
+For the backend service (Daily Mode emails), you'll need Node.js. See the backend directory for more information.

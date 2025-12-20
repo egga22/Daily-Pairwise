@@ -38,6 +38,15 @@ const progressFill = document.getElementById('progress-fill');
 const statsToggle = document.getElementById('stats-toggle');
 const statsPanel = document.getElementById('stats-panel');
 
+// Mode selection elements
+const modeRadios = document.querySelectorAll('input[name="ranking-mode"]');
+const dailyModeOption = document.getElementById('daily-mode-option');
+const dailyModeRadio = document.getElementById('daily-mode-radio');
+const dailyModeLoginMessage = document.getElementById('daily-mode-login-message');
+const dailyOptions = document.getElementById('daily-options');
+const dailyEmailInput = document.getElementById('daily-email');
+const dailyTimeInput = document.getElementById('daily-time');
+
 // Auth state
 let isLogin = true;
 let currentUser = null;
@@ -54,10 +63,39 @@ let mid = 0;
 let totalSteps = 0;
 let completedSteps = 0;
 let currentListId = null;
+let rankingMode = 'basic'; // 'basic' or 'daily'
+let dailyEmail = '';
+let dailyTime = '09:00';
 
 // Constants
 const MAX_LISTS_PER_USER = 3;
 const GUEST_STORAGE_KEY = 'guestList';
+// Backend URL - can be overridden via window.BACKEND_URL for different environments
+const BACKEND_URL = window.BACKEND_URL || 'http://localhost:3000';
+
+// Mode selection event listeners
+modeRadios.forEach(radio => {
+  radio.addEventListener('change', (e) => {
+    rankingMode = e.target.value;
+    if (rankingMode === 'daily') {
+      // Check if user is logged in (not guest mode) and has valid email
+      if (isGuestMode || !currentUser || !currentUser.email || currentUser.email === 'Guest') {
+        // Prevent selection and reset to basic mode
+        e.target.checked = false;
+        document.querySelector('input[name="ranking-mode"][value="basic"]').checked = true;
+        rankingMode = 'basic';
+        showError('Daily Mode is only available to logged-in users. Please sign in to use this feature.');
+        return;
+      }
+      
+      dailyOptions.classList.remove('hidden');
+      // Pre-fill email with user's account email (read-only)
+      dailyEmailInput.value = currentUser.email;
+    } else {
+      dailyOptions.classList.add('hidden');
+    }
+  });
+});
 
 startButton.addEventListener('click', async () => {
   const parsed = parseItems(itemsInput.value);
@@ -65,6 +103,24 @@ startButton.addEventListener('click', async () => {
   if (parsed.length === 0) {
     showError('Please provide at least one item to rank.');
     return;
+  }
+
+  // Validate daily mode inputs
+  if (rankingMode === 'daily') {
+    // Ensure user is logged in with valid email
+    if (isGuestMode || !currentUser || !currentUser.email || currentUser.email === 'Guest') {
+      showError('Daily Mode is only available to logged-in users. Please sign in first.');
+      return;
+    }
+    
+    // Use the logged-in user's email
+    dailyEmail = currentUser.email;
+    dailyTime = dailyTimeInput.value;
+    
+    if (!dailyTime) {
+      showError('Please select a preferred time for daily emails.');
+      return;
+    }
   }
 
   // Check list limit for non-guest users
@@ -247,6 +303,11 @@ function parseItems(raw) {
     .filter((item) => item.length > 0);
 }
 
+function isValidEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
 function showError(message) {
   errorMessage.textContent = message;
   errorMessage.classList.remove('hidden');
@@ -277,10 +338,72 @@ async function beginRanking() {
     return;
   }
 
+  // Handle daily mode
+  if (rankingMode === 'daily') {
+    // For daily mode, show confirmation and send first email
+    showDailyModeConfirmation();
+    return;
+  }
+
+  // Basic mode - continue as usual
   sortedItems = [items[0]];
   currentIndex = 1;
   prepareInsertion();
 }
+
+async function showDailyModeConfirmation() {
+  inputSection.classList.remove('hidden');
+  inputSection.innerHTML = `
+    <div class="card">
+      <h2>✅ Daily Mode Activated</h2>
+      <p>You will receive a daily email at <strong>${dailyTime}</strong> with a pairwise comparison.</p>
+      <p>We'll send your first comparison shortly to <strong>${dailyEmail}</strong>.</p>
+      <p>Click on your preferred option in the email to record your choice. You can also come back to this website anytime to continue ranking.</p>
+      <button id="send-first-email" class="primary">Send First Email Now</button>
+      <button id="back-to-input" class="secondary">Back</button>
+    </div>
+  `;
+  
+  document.getElementById('send-first-email').addEventListener('click', async () => {
+    await sendFirstDailyEmail();
+  });
+  
+  document.getElementById('back-to-input').addEventListener('click', () => {
+    resetApp();
+  });
+}
+
+async function sendFirstDailyEmail() {
+  try {
+    // Get the first two items to compare
+    const itemA = items[0];
+    const itemB = items.length > 1 ? items[1] : items[0];
+    
+    const response = await fetch(`${BACKEND_URL}/api/send-test-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: dailyEmail,
+        itemA: itemA,
+        itemB: itemB,
+        listId: currentListId || 'new',
+        pairId: '1'
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to send email');
+    }
+    
+    alert('Email sent successfully! Check your inbox.');
+  } catch (error) {
+    console.error('Error sending email:', error);
+    alert('Failed to send email. Make sure the backend server is running at ' + BACKEND_URL);
+  }
+}
+
 
 function prepareInsertion() {
   if (currentIndex >= items.length) {
@@ -457,6 +580,41 @@ function updateUserInfo(user) {
   } else {
     userInfo.textContent = '';
   }
+  
+  // Update daily mode availability
+  updateDailyModeAvailability();
+}
+
+function updateDailyModeAvailability() {
+  if (isGuestMode || !currentUser || !currentUser.email || currentUser.email === 'Guest') {
+    // Disable daily mode for guest users
+    if (dailyModeOption) {
+      dailyModeOption.classList.add('disabled');
+    }
+    if (dailyModeRadio) {
+      dailyModeRadio.disabled = true;
+    }
+    if (dailyModeLoginMessage) {
+      dailyModeLoginMessage.classList.remove('hidden');
+    }
+    // Reset to basic mode if daily was selected
+    if (rankingMode === 'daily') {
+      document.querySelector('input[name="ranking-mode"][value="basic"]').checked = true;
+      rankingMode = 'basic';
+      dailyOptions.classList.add('hidden');
+    }
+  } else {
+    // Enable daily mode for logged-in users
+    if (dailyModeOption) {
+      dailyModeOption.classList.remove('disabled');
+    }
+    if (dailyModeRadio) {
+      dailyModeRadio.disabled = false;
+    }
+    if (dailyModeLoginMessage) {
+      dailyModeLoginMessage.classList.add('hidden');
+    }
+  }
 }
 
 function showAuthSuccess(message) {
@@ -587,6 +745,11 @@ function loadList(list) {
   totalSteps = list.totalSteps || 0;
   completedSteps = list.completedSteps || 0;
   
+  // Restore mode settings
+  rankingMode = list.mode || 'basic';
+  dailyEmail = list.dailyEmail || '';
+  dailyTime = list.dailyTime || '09:00';
+  
   // Update UI
   itemsInput.value = items.join('\n');
   
@@ -633,6 +796,9 @@ async function saveCurrentList() {
       mid: mid,
       totalSteps: totalSteps,
       completedSteps: completedSteps,
+      mode: rankingMode,
+      dailyEmail: dailyEmail,
+      dailyTime: dailyTime,
       lastModified: serverTimestamp()
     };
     
@@ -707,6 +873,9 @@ function saveGuestList() {
     mid: mid,
     totalSteps: totalSteps,
     completedSteps: completedSteps,
+    mode: rankingMode,
+    dailyEmail: dailyEmail,
+    dailyTime: dailyTime,
     lastModified: Date.now()
   };
   
