@@ -173,9 +173,11 @@ async function sendPairwiseEmail(toEmail, itemA, itemB, listId, pairId, env) {
     choiceUrlB = `${workerUrl}/api/choice/${listId}/${pairId}/b`;
   } else {
     // Fallback: direct users to the frontend with choice parameter
-    // Note: Without WORKER_URL, choices won't be automatically recorded by the worker
-    // The frontend would need to handle the choice parameter if implemented
-    console.warn('WORKER_URL not configured - email links will redirect to frontend with choice parameter');
+    // LIMITATION: Without WORKER_URL configured, email choices cannot be automatically recorded
+    // The choice parameter is included in the URL but the current frontend doesn't handle it
+    // Users will need to manually continue their ranking session on the website
+    // To enable automatic choice recording, configure WORKER_URL in wrangler.toml
+    console.warn('WORKER_URL not configured - email links will redirect to frontend without recording choice');
     choiceUrlA = `${baseUrl}?list=${listId}&choice=a&continue=true`;
     choiceUrlB = `${baseUrl}?list=${listId}&choice=b&continue=true`;
   }

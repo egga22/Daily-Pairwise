@@ -152,7 +152,10 @@ In production, this would:
 
 Set in `wrangler.toml`:
 - `FRONTEND_URL`: URL of the frontend application (default: `https://egga22.github.io/Daily-Pairwise`)
-- `WORKER_URL`: URL of the deployed worker (e.g., `https://daily-pairwise.YOUR-SUBDOMAIN.workers.dev`) - required for email choice links to work
+- `WORKER_URL`: URL of the deployed worker (e.g., `https://daily-pairwise.YOUR-SUBDOMAIN.workers.dev`)
+  - **Required** for email choice links to work properly
+  - Without this, email links will redirect to the frontend but won't automatically record choices
+  - Users will need to manually continue their ranking session on the website
 
 Set as secrets (encrypted):
 - `MAILJET_API_KEY`: Your Mailjet API key
