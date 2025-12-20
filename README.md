@@ -43,16 +43,54 @@ The app performs an insertion sort guided by your selections, minimizing the tot
 
 ## Backend Service
 
-The Daily Mode feature requires a backend service to send emails. See the [backend README](backend/README.md) for setup instructions.
+The Daily Mode feature requires a backend service to send emails. The application supports two backend options:
 
-To run the backend:
+### Option 1: Cloudflare Workers (Recommended)
+
+The recommended deployment uses Cloudflare Workers for serverless, scalable email handling. See the [workers README](workers/README.md) for detailed setup instructions.
+
+Quick start:
+```bash
+# Install Wrangler CLI globally
+npm install -g wrangler
+
+# Navigate to workers directory
+cd workers
+
+# Install dependencies
+npm install
+
+# Login to Cloudflare
+wrangler login
+
+# Set secrets (API keys, sender email)
+wrangler secret put MAILJET_API_KEY
+wrangler secret put MAILJET_SECRET_KEY
+wrangler secret put SENDER_EMAIL
+wrangler secret put SENDER_NAME
+
+# Deploy to Cloudflare
+wrangler deploy
+
+# After deployment, update wrangler.toml with your worker URL and redeploy
+# Edit workers/wrangler.toml to add: WORKER_URL = "https://your-worker-url.workers.dev"
+wrangler deploy
+```
+
+After deployment, update the worker URL in `workers/wrangler.toml` (set the `WORKER_URL` variable) and update the backend URL in `script.js` if deploying to production.
+
+### Option 2: Express.js Backend (Legacy)
+
+For local development or alternative deployment, you can use the Express.js backend. See the [backend README](backend/README.md) for setup instructions.
+
+To run the backend locally:
 ```bash
 cd backend
 npm install
 npm start
 ```
 
-The backend uses the Mailjet API for sending emails.
+Both backends use the Mailjet API for sending emails.
 
 ## Firebase Authentication
 

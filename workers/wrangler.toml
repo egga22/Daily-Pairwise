@@ -1,0 +1,13 @@
+name = "daily-pairwise"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+
+[triggers]
+crons = ["0 * * * *"]  # Run every hour for scheduled emails
+
+[vars]
+FRONTEND_URL = "https://egga22.github.io/Daily-Pairwise"
+# After first deployment, uncomment and set WORKER_URL to your actual worker URL
+# This is required for email choice links to work properly (allows users to click options in emails)
+# Example: WORKER_URL = "https://daily-pairwise.YOUR-SUBDOMAIN.workers.dev"
+# WORKER_URL = ""
