@@ -921,9 +921,10 @@ window.initializeAuth = function() {
       }
     });
   } else {
-    // Firebase failed to load, show auth UI with error
+    // Firebase failed to load, show auth UI with informative message
     showAuthUI();
-    showAuthError('Firebase authentication is not available. Please check your connection or browser settings.');
+    hideAuthError(); // Hide any error messages
+    showAuthSuccess('Sign in is currently unavailable. You can continue as a guest to use all ranking features.');
   }
 }
 
