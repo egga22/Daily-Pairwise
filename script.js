@@ -561,6 +561,17 @@ function hideAuthError() {
   authError.classList.add('hidden');
 }
 
+function showAuthInfo(message) {
+  hideAuthError(); // Hide any error messages
+  authSuccess.textContent = message;
+  authSuccess.classList.remove('hidden');
+}
+
+function hideAuthInfo() {
+  authSuccess.textContent = '';
+  authSuccess.classList.add('hidden');
+}
+
 function showAuthUI() {
   authSection.classList.remove('hidden');
   authContainer.classList.add('hidden');
@@ -921,9 +932,9 @@ window.initializeAuth = function() {
       }
     });
   } else {
-    // Firebase failed to load, show auth UI with error
+    // Firebase failed to load, show auth UI with informative message
     showAuthUI();
-    showAuthError('Firebase authentication is not available. Please check your connection or browser settings.');
+    showAuthInfo('Sign in is currently unavailable. You can continue as a guest to use all ranking features.');
   }
 }
 
