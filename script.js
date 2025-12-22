@@ -561,17 +561,6 @@ function hideAuthError() {
   authError.classList.add('hidden');
 }
 
-function showAuthInfo(message) {
-  hideAuthError(); // Hide any error messages
-  authSuccess.textContent = message;
-  authSuccess.classList.remove('hidden');
-}
-
-function hideAuthInfo() {
-  authSuccess.textContent = '';
-  authSuccess.classList.add('hidden');
-}
-
 function showAuthUI() {
   authSection.classList.remove('hidden');
   authContainer.classList.add('hidden');
@@ -934,7 +923,8 @@ window.initializeAuth = function() {
   } else {
     // Firebase failed to load, show auth UI with informative message
     showAuthUI();
-    showAuthInfo('Sign in is currently unavailable. You can continue as a guest to use all ranking features.');
+    hideAuthError(); // Hide any error messages
+    showAuthSuccess('Sign in is currently unavailable. You can continue as a guest to use all ranking features.');
   }
 }
 
