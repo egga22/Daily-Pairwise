@@ -9,6 +9,8 @@ const authError = document.getElementById('auth-error');
 const authSuccess = document.getElementById('auth-success');
 const loginTab = document.getElementById('login-tab');
 const signupTab = document.getElementById('signup-tab');
+const headerLoginButton = document.getElementById('login-button');
+const headerSignupButton = document.getElementById('signup-button');
 const logoutButton = document.getElementById('logout-button');
 const userInfo = document.getElementById('user-info');
 const forgotPasswordButton = document.getElementById('forgot-password-button');
@@ -288,6 +290,22 @@ guestButton.addEventListener('click', () => {
   updateUserInfo(currentUser);
   loadGuestList();
 });
+
+if (headerLoginButton) {
+  headerLoginButton.addEventListener('click', () => {
+    isLogin = true;
+    showAuthUI();
+    loginTab.click();
+  });
+}
+
+if (headerSignupButton) {
+  headerSignupButton.addEventListener('click', () => {
+    isLogin = false;
+    showAuthUI();
+    signupTab.click();
+  });
+}
 
 newListButton.addEventListener('click', () => {
   hideListModal();
@@ -579,8 +597,26 @@ function updateUserInfo(user) {
   if (user && user.email) {
     const prefix = isGuestMode ? 'Guest mode' : 'Signed in as:';
     userInfo.textContent = `${prefix} ${user.email}`;
+    
+    // Always show logout button when authenticated (guest or real user)
+    if (logoutButton) logoutButton.classList.remove('hidden');
+    
+    // For guest mode: show login/signup buttons so they can create a real account
+    // For authenticated users: hide login/signup buttons
+    if (isGuestMode) {
+      if (headerLoginButton) headerLoginButton.classList.remove('hidden');
+      if (headerSignupButton) headerSignupButton.classList.remove('hidden');
+    } else {
+      if (headerLoginButton) headerLoginButton.classList.add('hidden');
+      if (headerSignupButton) headerSignupButton.classList.add('hidden');
+    }
   } else {
     userInfo.textContent = '';
+    
+    // When not authenticated at all, hide all buttons (auth UI will show instead)
+    if (logoutButton) logoutButton.classList.add('hidden');
+    if (headerLoginButton) headerLoginButton.classList.add('hidden');
+    if (headerSignupButton) headerSignupButton.classList.add('hidden');
   }
   
   // Update daily mode availability
