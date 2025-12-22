@@ -74,8 +74,7 @@ const GUEST_STORAGE_KEY = 'guestList';
 // For production deployment with Cloudflare Workers, set this to your worker URL:
 // const BACKEND_URL = window.BACKEND_URL || 'https://daily-pairwise.YOUR-SUBDOMAIN.workers.dev';
 // For local development with Express.js backend:
-const BACKEND_URL = window.BACKEND_URL || 'http://localhost:3000';
-
+const BACKEND_URL = window.BACKEND_URL || 'https://daily-pairwise.ejmbenson.workers.dev';
 // Mode selection event listeners
 modeRadios.forEach(radio => {
   radio.addEventListener('change', (e) => {
