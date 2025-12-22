@@ -291,17 +291,21 @@ guestButton.addEventListener('click', () => {
   loadGuestList();
 });
 
-headerLoginButton.addEventListener('click', () => {
-  isLogin = true;
-  showAuthUI();
-  loginTab.click();
-});
+if (headerLoginButton) {
+  headerLoginButton.addEventListener('click', () => {
+    isLogin = true;
+    showAuthUI();
+    loginTab.click();
+  });
+}
 
-headerSignupButton.addEventListener('click', () => {
-  isLogin = false;
-  showAuthUI();
-  signupTab.click();
-});
+if (headerSignupButton) {
+  headerSignupButton.addEventListener('click', () => {
+    isLogin = false;
+    showAuthUI();
+    signupTab.click();
+  });
+}
 
 newListButton.addEventListener('click', () => {
   hideListModal();
@@ -594,14 +598,15 @@ function updateUserInfo(user) {
     const prefix = isGuestMode ? 'Guest mode' : 'Signed in as:';
     userInfo.textContent = `${prefix} ${user.email}`;
     
+    // Always show logout button when authenticated (guest or real user)
+    if (logoutButton) logoutButton.classList.remove('hidden');
+    
     // For guest mode: show login/signup buttons so they can create a real account
-    // For authenticated users: only show logout button
+    // For authenticated users: hide login/signup buttons
     if (isGuestMode) {
-      if (logoutButton) logoutButton.classList.remove('hidden');
       if (headerLoginButton) headerLoginButton.classList.remove('hidden');
       if (headerSignupButton) headerSignupButton.classList.remove('hidden');
     } else {
-      if (logoutButton) logoutButton.classList.remove('hidden');
       if (headerLoginButton) headerLoginButton.classList.add('hidden');
       if (headerSignupButton) headerSignupButton.classList.add('hidden');
     }
